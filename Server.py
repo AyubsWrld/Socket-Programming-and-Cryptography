@@ -2,12 +2,22 @@ import socket
 import random 
 import os 
 from Crypto.Cipher import AES
+from Crypto.Util.Padding import unpad
+def read_key_from_file(file_path):
+    with open(file_path, 'rb') as f:
+        return f.read()
+
+key_file_path = 'key'
+key = read_key_from_file(key_file_path)
+
+#--------------------------------------------------------------------------------------------------------------------------------------------#
 
 MESSAGES = ["Enter the server IP or name: " , "Welcome to examination System\nPlease enter your name: "]
 OPERATORS = ["+" , "-" , "*"]
 HOST = '127.0.0.1' 
 PORT = 13000
 
+#--------------------------------------------------------------------------------------------------------------------------------------------#
 
 def server(): 
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -22,7 +32,6 @@ def server():
         print(HOSTNAME)
         conn.send(MESSAGES[1].encode('utf-8'))
         studentName = conn.recv(1024).decode('utf-8')
-        print(studentName)
         loopVal = True
         while loopVal : 
             for i in range(4) : 
@@ -35,16 +44,25 @@ def server():
                 loopVal = False
         break
 
+#--------------------------------------------------------------------------------------------------------------------------------------------#
 
 def test(conn,i):
     score = 0
     result = equation(i, conn)
-    user_answer = conn.recv(1024).decode('utf-8')
-    if int(user_answer) == result : 
+    cipher_text = conn.recv(1024)
+
+    decipher = AES.new(key, AES.MODE_CBC, cipher_text[:AES.block_size])
+    decrypted_data = decipher.decrypt(cipher_text[AES.block_size:])
+    unpadded_data = unpad(decrypted_data, AES.block_size)
+    print(f"Encrypted message received: {cipher_text}")
+    test = str(unpadded_data)
+    answer = int(test[2:-1])
+    print(f"Decrypted message received: {answer}")
+    if int(answer) == int(result): 
         score += 1 
     return score
 
-
+#--------------------------------------------------------------------------------------------------------------------------------------------#
 
 
 def equation(qINDEX : int , conn) -> int : 
@@ -62,6 +80,8 @@ def equation(qINDEX : int , conn) -> int :
     return int(answer)
 
     
+#--------------------------------------------------------------------------------------------------------------------------------------------#
+
 if __name__ == "__main__":
     server()
 
