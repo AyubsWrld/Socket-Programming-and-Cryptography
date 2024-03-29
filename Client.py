@@ -1,12 +1,22 @@
 import socket 
 import os 
 from Crypto.Cipher import AES
+from Crypto.Random import get_random_bytes
+from Crypto.Util.Padding import pad, unpad  
+
+
+
+def read_key_from_file(file_path):
+    with open(file_path, 'rb') as f:
+        return f.read()
+
+key = read_key_from_file('key') 
+iv = get_random_bytes(16)
 
 #--------------------------------------------------------------------------------------------------------------------------------------------#
 
 HOST = '127.0.0.1' 
-PORT = 13000
-
+PORT = 16926
 #--------------------------------------------------------------------------------------------------------------------------------------------#
 
 def handle_exam(socket): 
@@ -14,7 +24,11 @@ def handle_exam(socket):
         prompt = socket.recv(1024).decode('utf-8')
         print(prompt)
         user_answer = input("Answer: ")
-        socket.send(user_answer.encode('utf-8'))  
+        padded_answer = pad(user_answer.encode(), AES.block_size)
+        padded_answer_bytes = padded_answer
+        cipher = AES.new(key, AES.MODE_CBC, iv)
+        cipher_text = cipher.encrypt(padded_answer)
+        socket.send(cipher_text)
     results = socket.recv(1024).decode('utf-8')
     print(results)
 
