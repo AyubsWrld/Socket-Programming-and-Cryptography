@@ -7,7 +7,7 @@ from Crypto.Util.Padding import pad
 #--------------------------------------------------------------------------------------------------------------------------------------------#
 
 HOST = '127.0.0.1' 
-PORT = 13000
+PORT = 13002
 
 def read_key_from_file(file_path):
     with open(file_path, 'rb') as f:
@@ -59,5 +59,6 @@ def client():
 
 if __name__ == "__main__":
     client()
+
 
 
